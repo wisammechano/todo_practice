@@ -14,10 +14,7 @@ app.get('/todos', function (req, res) {
 });
 
 app.post('/todos', function(req, res) {
-  let todos = fs.readFileSync("./todos.json", 'utf-8');
-  todos = JSON.parse(todos);
-  todos.push(req.body.todo)
-  fs.writeFile('./todos.json', JSON.stringify(todos));
+  fs.writeFileSync('./todos.json', JSON.stringify(req.body));
   res.send("Done!")
 })
 
