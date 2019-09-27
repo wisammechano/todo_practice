@@ -6,6 +6,15 @@ let todoTable = document.querySelector(".todo-table");
 let todoArray = [];
 let editIndex = -1;
 
+fetch("/todos").then(function(res) {
+    return res.json()
+}).then(function(todosJson) {
+    todosJson.forEach((e) => {
+        todoArray.push(e);
+    })
+    updateTable()
+})
+
 function submitEventHandler(event) {
     event.preventDefault();
     let input = document.querySelector("#todo-input input");
@@ -59,4 +68,20 @@ function onEditTodo(e) {
     let todo = todoArray[todoIndex];
     document.querySelector("#todo-input input").value = todo.text;
     editIndex = todoIndex;
+}
+
+function formatDate(date) {
+    let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let hours = date.getHours();
+
+    let ampm = hours > 12 ? "PM" : "AM";
+
+    hours = hours > 12 ? hours - 12 + "": hours + "";
+    hours = hours.length == 1? "0" + hours: hours;
+    minutes = date.getMinutes() + "";
+    minutes = minutes.length == 1? "0" + minutes: minutes;
+    
+    let str = months[date.getMonth()] + ' ' + date.getDate() + ', ' + hours + ":" + minutes + " " + ampm;
+    return str;
 }
