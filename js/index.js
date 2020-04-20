@@ -3,8 +3,41 @@ form.onsubmit = submitEventHandler;
 
 let todoTable = document.querySelector(".todo-table");
 
-let todoArray = [];
+const todoArray = [];
 let editIndex = -1;
+
+updateTodos();
+
+setInterval(updateTodos, 2000);
+
+
+function updateTodos() {
+    fetch("/todos").then(function (res) {
+        return res.json()
+    }).then(function (todosJson) {
+        todoArray.length = 0;
+        todosJson.forEach((e) => {
+            todoArray.push(e);
+        })
+        updateTable()
+    })
+}
+
+function postTodos() {
+    fetch("/todos", {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify(todoArray)
+    }).then(function (res) {
+        if (res.ok) {
+            console.log("Sent Successfully");
+        } else {
+            console.log("Error", res.status);
+        }
+    })
+}
 
 function submitEventHandler(event) {
     event.preventDefault();
@@ -20,13 +53,14 @@ function submitEventHandler(event) {
         editIndex = -1;
     }
     updateTable();
+    postTodos();
 }
 
 function updateTable() {
     todoTable.innerHTML = '<div class="table-row table-head"><div class="table-cell grow">Todo Description</div><div class="table-cell">Added On</div><div class="table-cell">Actions</div></div>';
     for (let i = 0; i < todoArray.length; i++) {
         let todo = todoArray[i];
-        let HTMLTemplate = `<div class="table-cell grow">${todo.text}</div><div class="table-cell">${todo.time}</div><div class="table-cell"><a class="todo-delete" href="#">Delete</a><a class="todo-edit" href="#">Edit</a></div>`;
+        let HTMLTemplate = `<div class="table-cell grow">${todo.text}</div><div class="table-cell">${formatDate(todo.time)}</div><div class="table-cell"><a class="todo-delete" href="#">Delete</a><a class="todo-edit" href="#">Edit</a></div>`;
         let wrapper = document.createElement("div");
         wrapper.classList = "table-row table-body";
         wrapper.innerHTML = HTMLTemplate;
@@ -40,7 +74,7 @@ function updateTable() {
 function createTodo(todoText) {
     return {
         text: todoText,
-        time: "Sep 12, 03:12 PM"
+        time: new Date().getTime()
     };
 }
 
@@ -50,6 +84,7 @@ function onDeleteTodo(e) {
     let todoIndex = parseInt(todoWrapper.id.split('-')[1]);
     todoArray.splice(todoIndex, 1);
     updateTable();
+    postTodos();
 }
 
 function onEditTodo(e) {
@@ -59,4 +94,21 @@ function onEditTodo(e) {
     let todo = todoArray[todoIndex];
     document.querySelector("#todo-input input").value = todo.text;
     editIndex = todoIndex;
+}
+
+function formatDate(ts) {
+    const date = new Date(ts)
+    let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let hours = date.getHours();
+
+    let ampm = hours > 12 ? "PM" : "AM";
+
+    hours = hours > 12 ? hours - 12 + "" : hours + "";
+    hours = hours.length == 1 ? "0" + hours : hours;
+    minutes = date.getMinutes() + "";
+    minutes = minutes.length == 1 ? "0" + minutes : minutes;
+
+    let str = months[date.getMonth()] + ' ' + date.getDate() + ', ' + hours + ":" + minutes + " " + ampm;
+    return str;
 }
